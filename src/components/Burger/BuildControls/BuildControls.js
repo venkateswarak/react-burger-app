@@ -11,7 +11,7 @@ import BuildControl from "../BuildControl/BuildControl";
 const buildControls = (props) => {
     return (
         <div className={styles.BuildControls}>
-        <p> Total Price = <strong>${props.currentPrice.toFixed(1)}</strong></p>
+        <p> Total Price = <strong>${props.currentPrice.toFixed(2)}</strong></p>
         {
             controls.map((control)=> {
                 return <BuildControl key={control.label} label={control.label}
