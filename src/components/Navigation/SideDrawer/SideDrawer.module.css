@@ -24,3 +24,14 @@
 .Close{
     transform: translateX(-100%)
 }
+
+.Logo{
+height: 11%;
+margin-bottom: 17px;
+padding-left: 10%;
+}
+
+.NItems{
+    padding-left: 10%;
+}
+
