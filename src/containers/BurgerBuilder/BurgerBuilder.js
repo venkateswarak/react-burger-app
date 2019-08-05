@@ -1,9 +1,10 @@
 import React, { Component } from "react";
-import Aux from "../../hoc/Aux";
+import Aux from "../../hoc/Aux/Aux";
 import Burger from "../../components/Burger/Burger";
 import BuildControls from "../../components/Burger/BuildControls/BuildControls";
 import Modal from "../../components/UI/Modal/Modal";
 import OrderSummary from "../../components/Burger/OrderSummary/OrderSummary";
+import PropTypes from 'prop-types';
 
 const PRICE_INGREDIENTS = {
   salad: 0.67,
@@ -110,6 +111,12 @@ class BurgerBuilder extends Component {
       </Aux>
     );
   }
+}
+
+BurgerBuilder.propTypes ={
+  continueActionHandler : PropTypes.func,
+  orderButtonHandler: PropTypes.func
+
 }
 
 export default BurgerBuilder;
