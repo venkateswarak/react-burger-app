@@ -4,7 +4,10 @@ import Burger from "../../components/Burger/Burger";
 import BuildControls from "../../components/Burger/BuildControls/BuildControls";
 import Modal from "../../components/UI/Modal/Modal";
 import OrderSummary from "../../components/Burger/OrderSummary/OrderSummary";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
+import axios from "../../orders-axios";
+import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler'
+import Spinner from "../../components/UI/Spinner/Spinner";
 
 const PRICE_INGREDIENTS = {
   salad: 0.67,
@@ -14,16 +17,27 @@ const PRICE_INGREDIENTS = {
 };
 class BurgerBuilder extends Component {
   state = {
-    ingredients: {
-      salad: 0,
-      meat: 0,
-      bacon: 0,
-      cheese: 0
-    },
+    ingredients: null,
     price: 6,
     enableCheckOut: false,
-    modalShow: false
+    modalShow: false,
+    buffering: false,
+    error: false
   };
+
+  componentDidMount(){
+    axios.get('/ingredients.json')
+    .then ((res)=> {
+      this.setState({ingredients : res.data})
+
+    })
+    .catch(err => {
+      this.setState({
+        error: true
+      }
+      )
+    })
+  }
 
   orderButtonHandler(ingredients) {
     const count = Object.keys(ingredients)
@@ -48,7 +62,33 @@ class BurgerBuilder extends Component {
     });
   };
   continueActionHandler = () => {
-    alert("So you choose to continue?");
+    const order = {
+      customer: {
+        Name: "Ven Kotha",
+        Phone: 1234567890,
+        Address: {
+          Street: "123 My Street",
+          City: "MyCity",
+          ZipCode: 54321
+        }
+      },
+      ingredients: {
+        salad: this.state.ingredients.salad,
+        meat: this.state.ingredients.meat,
+        bacon: this.state.ingredients.bacon,
+        cheese: this.state.ingredients.cheese
+      },
+      price: this.state.ingredients.price,
+      delivery: "standard"
+    };
+    this.setState({
+      buffering:true
+    });
+    axios.post("/orders.json", order).then(res => {
+      this.setState({ buffering: false, modalShow: false });
+    }).catch(err => {
+      this.setState({ buffering: false, modalShow: false });
+    })
   };
 
   addIngredient = type => {
@@ -85,21 +125,12 @@ class BurgerBuilder extends Component {
     for (let key in disabledInfo) {
       disabledInfo[key] = disabledInfo[key] <= 0;
     }
-    return (
-      <Aux>
-        <Modal
-          style={this.state.modalShow}
-          modalClosed={this.closeModalHandler}
-        >
-          <OrderSummary
-            ingredients={this.state.ingredients}
-            cancelAction={this.closeModalHandler}
-            continueAction={this.continueActionHandler}
-            price={this.state.price}
-          />
-        </Modal>
-
-        <Burger ingredients={this.state.ingredients} />
+    let orderSummary = null;
+    
+    let burger = this.state.error? <p>Ingredients can't be loaded</p> : <Spinner/>
+    if (this.state.ingredients){
+      burger = (   <Aux>     
+      <Burger ingredients={this.state.ingredients} />
         <BuildControls
           addIngredient={this.addIngredient}
           removeIngredient={this.removeIngredient}
@@ -108,15 +139,36 @@ class BurgerBuilder extends Component {
           clickedOrder={this.modalHandler}
           enableCheckOut={this.state.enableCheckOut}
         />
+      </Aux> );
+      orderSummary = (
+        <OrderSummary
+          ingredients={this.state.ingredients}
+          cancelAction={this.closeModalHandler}
+          continueAction={this.continueActionHandler}
+          price={this.state.price}
+        />
+      );
+    }
+    if (this.state.buffering) {
+      orderSummary = <Spinner />
+    }
+    return (
+      <Aux>
+        <Modal
+          style={this.state.modalShow}
+          modalClosed={this.closeModalHandler}
+        >
+          {orderSummary}
+        </Modal>
+        {burger}
       </Aux>
     );
   }
 }
 
-BurgerBuilder.propTypes ={
-  continueActionHandler : PropTypes.func,
+BurgerBuilder.propTypes = {
+  continueActionHandler: PropTypes.func,
   orderButtonHandler: PropTypes.func
+};
 
-}
-
-export default BurgerBuilder;
+export default withErrorHandler(BurgerBuilder, axios);
